@@ -1,0 +1,27 @@
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+.venv/
+venv/
+env/
+.env
+
+# Original datasets and heavy outputs
+data/
+dataset/
+csa_data/
+author_data/
+ml_data/
+exp_result/
+models/
+
+# Model checkpoints
+*.pt
+*.pth
+*.h5
+*.ckpt
+
+# OS
+.DS_Store
+Thumbs.db
