@@ -150,7 +150,7 @@ An AI-powered research platform that integrates omics data and molecular drug re
 
 This should be positioned as a research and hypothesis prioritization tool, not as a clinical decision-making system.
 
-**Author**
+# Author
 
 Pedro Chacón Cabrera
 Health Engineering — Clinical Informatics
