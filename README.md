@@ -85,3 +85,73 @@ results/       Summary metrics and experiment outputs
 figures/       Main figures generated for analysis
 docs/          Thesis notes and documentation
 data_sample/   Small sample files showing the input data format
+```
+
+Key folders
+src/
+
+Contains the adapted DeepTTC pipeline and auxiliary scripts for preprocessing, training, inference and result processing.
+
+data_sample/
+
+Contains small sample files derived from the original dataset structure. These files are intended only to illustrate the expected input format.
+
+figures/
+
+Contains visualizations generated during the experimental analysis, including real vs predicted AUC plots and drug-out error analysis.
+
+results/
+
+Contains prediction outputs and experiment-related results. The baseline outputs are organized under results/baseline/.
+
+docs/
+
+Contains complementary documentation about the dataset, model, methodology, experimental design and results.
+
+Technologies used
+Python
+pandas
+NumPy
+scikit-learn
+PyTorch
+Deep learning
+Random Forest
+Molecular fingerprints
+SMILES representations
+Omics data analysis
+Git/GitHub
+Limitations
+
+This project is research-oriented and has several important limitations:
+
+It uses cancer cell line data, not direct patient-level clinical data.
+The model has not been clinically validated.
+Drug-out generalization remains challenging.
+The results should be interpreted as experimental and exploratory.
+The repository is not intended for medical use or treatment recommendation.
+Future work
+
+Possible future research directions include:
+
+Improving drug-out generalization.
+Testing graph neural networks for molecular representation.
+Using pretrained molecular models.
+Combining SMILES and ECFP4 representations.
+Adding multi-omics data such as mutations, copy number variation or methylation.
+Adding uncertainty estimation and out-of-distribution detection.
+Building a research-oriented platform for drug response hypothesis prioritization.
+Product-oriented vision
+
+This project can be extended into a research platform for oncology drug response analysis.
+
+A possible future product direction is:
+
+An AI-powered research platform that integrates omics data and molecular drug representations to prioritize drug response hypotheses in cancer, with explainability, uncertainty estimation and benchmark-based validation.
+
+This should be positioned as a research and hypothesis prioritization tool, not as a clinical decision-making system.
+
+Author
+
+Pedro Chacón Cabrera
+Health Engineering — Clinical Informatics
+University of Seville
