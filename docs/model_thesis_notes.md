@@ -1,12 +1,21 @@
-## Descripción del modelo (DeepTTC)
+## Model Description (DeepTTC)
 
-DeepTTC es un modelo de predicción de respuesta a fármacos que combina información del **fármaco** (en formato SMILES) y de la **línea celular** (expresión génica) para predecir una variable continua de respuesta (en nuestro caso, **AUC**). La idea central es aprender una representación numérica del fármaco a partir de SMILES mediante un bloque tipo **Transformer**, y aprender una representación compacta de la célula a partir del vector de genes mediante una **red MLP**.
+DeepTTC is a drug response prediction model that combines information from the **drug** in SMILES format and the **cell line** through gene expression to predict a continuous response variable, in our case **AUC**. The central idea is to learn a numerical representation of the drug from SMILES using a **Transformer-based** block, and to learn a compact representation of the cell line from the gene expression vector using an **MLP**.
 
-### Rama del fármaco (SMILES → Transformer)
-El SMILES se convierte primero en una secuencia de tokens (subestructuras) y se proyecta a embeddings. Esa secuencia se procesa con un **encoder Transformer** (multi-head self-attention + capas feed-forward), produciendo un vector resumen del fármaco. En nuestras ejecuciones, los hiperparámetros relevantes de esta rama son el número de cabezas de atención (`transformer_num_attention_heads_drug`) y el número de capas del encoder (`transformer_n_layer_drug`), que se analizaron mediante ablations.
+### Drug Branch (SMILES → Transformer)
 
-### Rama de la célula (expresión génica → MLP)
-La expresión génica se representa como un vector de dimensión fija (en nuestro caso se utilizan **958 genes**). Ese vector se introduce en una **MLP** con varias capas densas y activación ReLU para obtener una representación latente de la línea celular, que captura patrones de sensibilidad/resistencia asociados al perfil transcriptómico.
+The SMILES representation is first converted into a sequence of tokens, corresponding to molecular substructures, and then projected into embeddings. This sequence is processed by a **Transformer encoder** composed of multi-head self-attention and feed-forward layers, producing a summary vector for the drug.
 
-### Fusión y salida (regresión)
-Los vectores latentes de fármaco y célula se **concatenan** y se pasan por un MLP final (“classifier” en el código, aunque aquí realiza regresión) que produce una única salida real: la predicción de **AUC**. El entrenamiento se realiza minimizando **MSE** y se evalúa en TEST con métricas de regresión (MSE/RMSE), correlaciones (Pearson/Spearman) y **R²**.
+In our experiments, the most relevant hyperparameters of this branch are the number of attention heads, `transformer_num_attention_heads_drug`, and the number of encoder layers, `transformer_n_layer_drug`, which were analyzed through ablation experiments.
+
+### Cell Branch (Gene Expression → MLP)
+
+Gene expression is represented as a fixed-size numerical vector. In our case, **958 genes** are used as input. This vector is passed through an **MLP** with several dense layers and ReLU activation functions to obtain a latent representation of the cell line.
+
+This latent vector is intended to capture sensitivity and resistance patterns associated with the transcriptomic profile of the cell line.
+
+### Fusion and Output (Regression)
+
+The drug and cell latent vectors are **concatenated** and passed through a final MLP, referred to as the “classifier” in the code, although in this project it performs regression. This final block produces a single real-valued output: the predicted **AUC**.
+
+Training is performed by minimizing **MSE**, and the model is evaluated on the TEST set using regression metrics such as **MSE/RMSE**, correlation metrics such as **Pearson/Spearman**, and **R²**.
