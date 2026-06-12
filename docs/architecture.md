@@ -1,88 +1,119 @@
-# Arquitectura del modelo (DeepTTC): rama fármaco + atención
+# Model Architecture (DeepTTC): Drug Branch + Attention
 
-## Visión general
-DeepTTC predice la respuesta a fármacos (por defecto **AUC**) combinando **dos ramas**:
-1) **Rama del fármaco (drug encoder)**: convierte el SMILES en un vector usando un **Transformer** con **self-attention multi-cabeza**.  
-2) **Rama de la célula (gene encoder)**: procesa la **expresión génica** con un **MLP** y produce otro vector.  
+## Overview
 
-Ambos vectores se **concatenan** y pasan por un **MLP final** que devuelve una única predicción (regresión).
+DeepTTC predicts drug response, by default **AUC**, by combining **two branches**:
 
-**Esquema (alto nivel)**
-- `SMILES → tokenización/ESPF → Transformer → z_drug`
-- `genes → scaling → MLP → z_cell`
-- `concat(z_drug, z_cell) → MLP → ŷ(AUC)`
+1. **Drug branch (drug encoder)**: converts the SMILES representation into a vector using a **Transformer** with **multi-head self-attention**.
+2. **Cell branch (gene encoder)**: processes **gene expression** through an **MLP** and produces another vector.
 
----
+Both vectors are **concatenated** and passed through a **final MLP**, which outputs a single regression prediction.
 
-## Rama del fármaco: SMILES → embeddings → Transformer (atención)
-### 1) SMILES → representación de entrada
-En el preprocesado, cada molécula está en formato **SMILES**. Se tokeniza (vía `Step2_DataEncoding.py`, método interno `obj._drug2emb_encoder`) y se guarda como `drug_encoding`.  
-En el `forward` del modelo, el fármaco entra como:
-- `e = v[0]`: **tokens** (IDs enteros)
-- `e_mask = v[1]`: **máscara** (1 = token real, 0 = padding)
+**High-level pipeline**
 
-### 2) Embedding
-Los tokens se proyectan a un espacio denso con:
-- `input_dim_drug` = tamaño del vocabulario de tokens (p.ej. 2586)
-- `transformer_emb_size_drug` = dimensión del embedding (p.ej. 128)
-
-Esto convierte una secuencia de IDs en una secuencia de vectores.
-
-### 3) Atención (Transformer encoder)
-La parte “importante” del bloque de fármaco está en `Encoder_MultipleLayers(...)`, que implementa un Transformer con:
-- `transformer_n_layer_drug`: nº de capas (p.ej. 8)
-- `transformer_num_attention_heads_drug`: nº de cabezas de atención (p.ej. 8)
-- `transformer_intermediate_size_drug`: tamaño de la red feed-forward interna (p.ej. 512)
-- `transformer_attention_probs_dropout` y `transformer_hidden_dropout_rate`: dropouts
-
-La máscara se expande y se convierte en el “mask” típico de Transformer (penalizando padding con valores muy negativos) para que la atención ignore tokens de relleno.
-
-### 4) Vector final del fármaco
-El Transformer devuelve una secuencia de embeddings (uno por token).  
-El modelo usa el embedding de la **posición 0** como representación global de la molécula:
-
-- `drug_embedding = encoded_layers[:, 0]`
-
-En la práctica se usa como vector agregador (estilo **CLS**) aunque no sea un token especial explícito del SMILES.
+* `SMILES → tokenization/ESPF → Transformer → z_drug`
+* `genes → scaling → MLP → z_cell`
+* `concat(z_drug, z_cell) → MLP → ŷ(AUC)`
 
 ---
 
-## Rama de la célula: expresión génica → MLP
-La expresión génica entra como un vector numérico (dimensión `gene_dim`). En nuestras ejecuciones el modelo reporta **958 genes de entrada** (subconjunto tipo LINCS).  
-Se procesa con un MLP (`MLP`) con capas ocultas hasta obtener un embedding de célula (por defecto 256).
+## Drug Branch: SMILES → Embeddings → Transformer Attention
+
+### 1. SMILES → Input Representation
+
+During preprocessing, each molecule is represented in **SMILES** format. It is tokenized using `Step2_DataEncoding.py`, through the internal method `obj._drug2emb_encoder`, and stored as `drug_encoding`.
+
+In the model `forward` pass, the drug input is handled as:
+
+* `e = v[0]`: **tokens** as integer IDs
+* `e_mask = v[1]`: **mask**, where `1` indicates a real token and `0` indicates padding
+
+### 2. Embedding Layer
+
+The tokens are projected into a dense vector space using:
+
+* `input_dim_drug`: size of the token vocabulary, for example `2586`
+* `transformer_emb_size_drug`: embedding dimension, for example `128`
+
+This converts a sequence of token IDs into a sequence of dense vectors.
+
+### 3. Attention Mechanism: Transformer Encoder
+
+The main component of the drug branch is implemented in `Encoder_MultipleLayers(...)`, which defines a Transformer encoder with:
+
+* `transformer_n_layer_drug`: number of encoder layers, for example `8`
+* `transformer_num_attention_heads_drug`: number of attention heads, for example `8`
+* `transformer_intermediate_size_drug`: size of the internal feed-forward network, for example `512`
+* `transformer_attention_probs_dropout`: dropout applied to attention probabilities
+* `transformer_hidden_dropout_rate`: dropout applied to hidden representations
+
+The mask is expanded and transformed into the standard Transformer attention mask, assigning very negative values to padded positions so that the attention mechanism ignores padding tokens.
+
+### 4. Final Drug Representation
+
+The Transformer outputs a sequence of embeddings, one per token.
+
+The model uses the embedding at **position 0** as the global representation of the molecule:
+
+```python
+drug_embedding = encoded_layers[:, 0]
+```
+
+In practice, this vector acts as an aggregation representation, similar to a **CLS** token, even though the SMILES sequence does not explicitly include a special CLS token.
 
 ---
 
-## Fusión y predicción final
-En `Classifier.forward(...)`:
-1) `v_D = model_drug(v_D)` → embedding del fármaco
-2) `v_P = model_gene(v_P)` → embedding de la célula
-3) `v_f = concat(v_D, v_P)` → concatenación
-4) MLP final con capas ocultas (1024, 1024, 512) → salida escalar
+## Cell Branch: Gene Expression → MLP
 
-La salida final es una predicción continua (regresión). Se entrena con pérdida **MSE** y se reportan métricas de test como **MSE/RMSE**, **Pearson/Spearman** y **R²** para comparar runs.
+Gene expression is provided as a numerical vector with dimension `gene_dim`.
+
+In our experiments, the model reports **958 input genes**, corresponding to a LINCS-like subset. This vector is processed through an `MLP`, which maps the gene expression profile into a cell embedding, set by default to `256` dimensions.
 
 ---
 
-## Parámetros clave a reportar (bloque de fármacos)
-- `input_dim_drug`
-- `transformer_emb_size_drug`
-- `transformer_n_layer_drug`
-- `transformer_num_attention_heads_drug`
-- `transformer_intermediate_size_drug`
-- `transformer_attention_probs_dropout`
-- `transformer_hidden_dropout_rate`
-- `dropout`
+## Fusion and Final Prediction
+
+Inside `Classifier.forward(...)`:
+
+1. `v_D = model_drug(v_D)` → drug embedding
+2. `v_P = model_gene(v_P)` → cell embedding
+3. `v_f = concat(v_D, v_P)` → concatenation of both embeddings
+4. Final MLP with hidden layers `(1024, 1024, 512)` → scalar output
+
+The final output is a continuous regression prediction. The model is trained using **MSE loss**, and test performance is reported using metrics such as **MSE/RMSE**, **Pearson/Spearman correlation**, and **R²** to compare different runs.
 
 ---
 
-## Ablation study (configuración del Transformer de fármacos)
-Para analizar la sensibilidad del modelo a la configuración del Transformer que procesa los fármacos (SMILES → embeddings → atención), se realizaron dos ablations sobre el conjunto TEST:
-- **heads4**: reducción del número de cabezas de atención (`transformer_num_attention_heads_drug`: 8 → 4).
-- **layers4**: reducción del número de capas del encoder (`transformer_n_layer_drug`: 8 → 4).
+## Key Parameters to Report for the Drug Branch
 
-Los resultados muestran que el **baseline (8 cabezas, 8 capas)** mantiene el mejor rendimiento global. Reducir cabezas a 4 apenas cambia las métricas (pero no mejora), mientras que reducir capas a 4 produce una degradación más clara (aumenta RMSE y disminuye R²). Esto sugiere que la **profundidad del encoder** aporta capacidad representacional relevante para capturar relaciones subestructura–respuesta.
+* `input_dim_drug`
+* `transformer_emb_size_drug`
+* `transformer_n_layer_drug`
+* `transformer_num_attention_heads_drug`
+* `transformer_intermediate_size_drug`
+* `transformer_attention_probs_dropout`
+* `transformer_hidden_dropout_rate`
+* `dropout`
 
-**Material generado para documentación**
-- Figuras (TEST): `tfg-notas/figuras/test_scatter_{baseline,heads4,layers4}.png`
-- Tabla resumen (TEST): `tfg-notas/tabla_resultados.md`
+---
+
+## Ablation Study: Drug Transformer Configuration
+
+To analyze how sensitive the model is to the Transformer configuration used to process drugs, namely `SMILES → embeddings → attention`, two ablation experiments were performed on the TEST set:
+
+* **heads4**: reduction of the number of attention heads
+  `transformer_num_attention_heads_drug: 8 → 4`
+
+* **layers4**: reduction of the number of encoder layers
+  `transformer_n_layer_drug: 8 → 4`
+
+The results show that the **baseline configuration with 8 attention heads and 8 encoder layers** achieves the best overall performance. Reducing the number of heads to 4 barely changes the metrics, although it does not improve performance. In contrast, reducing the number of layers to 4 leads to a clearer degradation, increasing RMSE and decreasing R².
+
+This suggests that the **depth of the encoder** provides relevant representational capacity for capturing substructure-response relationships.
+
+---
+
+## Generated Documentation Material
+
+* TEST figures: `tfg-notas/figuras/test_scatter_{baseline,heads4,layers4}.png`
+* TEST summary table: `tfg-notas/tabla_resultados.md`
