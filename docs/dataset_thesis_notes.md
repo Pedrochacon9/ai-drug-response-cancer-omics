@@ -1,67 +1,130 @@
-# Dataset / Memoria de datos — DeepTTC + IMPROVE
+# Dataset / Data Documentation — DeepTTC + IMPROVE
 
-Estamos usando el **benchmark de IMPROVE (drug response prediction)** como fuente estándar de datos, y el repo **DeepTTC** lo consume en formato “IMPROVE-style”: parte de los datos vienen ya en `csa_data/raw_data/` (features X e Y), y otra parte son recursos `author_data/` (vocabulario/ESPF) necesarios para codificar SMILES. En nuestro flujo, primero **preprocesamos** (generamos `train_data.h5`, `val_data.h5`, `test_data.h5` y CSVs auxiliares) y luego entrenamos/inferimos usando esos ficheros ya preparados.
+We use the **IMPROVE benchmark for drug response prediction** as the standard data source. The **DeepTTC** repository consumes the data in an “IMPROVE-style” format: part of the data is already provided under `csa_data/raw_data/` as X and Y features, while another part comes from `author_data/`, mainly the vocabulary/ESPF resources required to encode SMILES.
 
-## Repos / rutas principales (WSL)
-- Repo modelo: `~/tfg/DeepTTC/`
-- Repo IMPROVE (librería): `~/tfg/IMPROVE/` *(instalado con `pip install -e .` para poder hacer `import improvelib`)*
+In our workflow, we first run the **preprocessing step**, which generates `train_data.h5`, `val_data.h5`, `test_data.h5`, and auxiliary CSV files. Then, training and inference are performed using these prepared files.
 
-## Ficheros de datos “crudos” que realmente usamos (DeepTTC)
-### Target (Y)
-- `csa_data/raw_data/y_data/response.tsv`  
-  Contiene la respuesta/label por par **(improve_sample_id, improve_chem_id)**.  
-  En nuestros runs el target es `auc`.
+## Main Repositories / Paths (WSL)
 
-### Drug (X-drug)
-- `csa_data/raw_data/x_data/drug_SMILES.tsv`  
-  Mapa **improve_chem_id → SMILES/canSMILES** (entrada del transformer de fármacos).
-- (alternativos disponibles, no imprescindibles si usamos SMILES):
-  - `csa_data/raw_data/x_data/drug_ecfp4_nbits512.tsv`
-  - `csa_data/raw_data/x_data/drug_mordred.tsv`
-  - `csa_data/raw_data/x_data/drug_info.tsv`
+* Model repository: `~/tfg/DeepTTC/`
+* IMPROVE repository/library: `~/tfg/IMPROVE/`
+  Installed with `pip install -e .` so that `import improvelib` works correctly.
 
-### Cell line / cáncer (X-cell)
-- `csa_data/raw_data/x_data/cancer_gene_expression.tsv`  
-  Matriz de expresión génica por `improve_sample_id` (en nuestro caso, el modelo reporta **958 genes** de entrada).
+## Raw Data Files Used by DeepTTC
 
-### Splits (train/val/test)
-- `CCLE_split_0_train.txt`
-- `CCLE_split_0_val.txt`
-- `CCLE_split_0_test.txt`
+### Target Variable (Y)
 
-## Recursos necesarios para codificar SMILES (author_data)
-- `author_data/ESPF/`  
-  Vocabulario y mapas de subwords (ESPF) usados para tokenizar SMILES.
-  - `author_data/ESPF/subword_units_map_uniprot_2000.csv`
-  - `author_data/ESPF/subword_units_map_chembl_freq_1500.csv`
+* `csa_data/raw_data/y_data/response.tsv`
+  Contains the response/label for each **(improve_sample_id, improve_chem_id)** pair.
+  In our runs, the prediction target is `auc`.
 
-## Salidas del preprocesamiento (las que se usan en entrenamiento/inferencia)
-Se guardan en `exp_result/` (o dentro de `exp_result/runs/<run>/` si hacemos runs separados):
-- `train_data.h5`, `val_data.h5`, `test_data.h5`
-- `train_y_data.csv`, `val_y_data.csv`, `test_y_data.csv`
+### Drug Features (X-drug)
 
-## Salidas típicas de entrenamiento/inferencia
-- Modelo: `model.pt`
-- Scores: `val_scores.json`, `test_scores.json`
-- Predicciones: `val_y_data_predicted.csv`, `test_y_data_predicted.csv`
-- Tabla (true vs pred): `val_results.tsv`, `test_results.tsv`
-- Figura: `val_scatter.png`, `test_scatter.png`
+* `csa_data/raw_data/x_data/drug_SMILES.tsv`
+  Maps **improve_chem_id → SMILES/canSMILES**.
+  This is the input used by the drug Transformer branch.
+
+* Alternative files available, although not required when using SMILES:
+
+  * `csa_data/raw_data/x_data/drug_ecfp4_nbits512.tsv`
+  * `csa_data/raw_data/x_data/drug_mordred.tsv`
+  * `csa_data/raw_data/x_data/drug_info.tsv`
+
+### Cell Line / Cancer Features (X-cell)
+
+* `csa_data/raw_data/x_data/cancer_gene_expression.tsv`
+  Gene expression matrix indexed by `improve_sample_id`.
+  In our case, the model reports **958 input genes**.
+
+### Train / Validation / Test Splits
+
+* `CCLE_split_0_train.txt`
+* `CCLE_split_0_val.txt`
+* `CCLE_split_0_test.txt`
+
+## Resources Required to Encode SMILES (`author_data`)
+
+* `author_data/ESPF/`
+  Vocabulary and subword mapping files used to tokenize SMILES with ESPF.
+
+  * `author_data/ESPF/subword_units_map_uniprot_2000.csv`
+  * `author_data/ESPF/subword_units_map_chembl_freq_1500.csv`
+
+## Preprocessing Outputs Used for Training and Inference
+
+The preprocessing outputs are stored in `exp_result/`, or inside `exp_result/runs/<run>/` when using separate experiment runs:
+
+* `train_data.h5`
+* `val_data.h5`
+* `test_data.h5`
+* `train_y_data.csv`
+* `val_y_data.csv`
+* `test_y_data.csv`
+
+## Typical Training / Inference Outputs
+
+* Trained model: `model.pt`
+* Scores: `val_scores.json`, `test_scores.json`
+* Predictions: `val_y_data_predicted.csv`, `test_y_data_predicted.csv`
+* True vs predicted tables: `val_results.tsv`, `test_results.tsv`
+* Scatter plots: `val_scatter.png`, `test_scatter.png`
 
 ---
 
-## Dataset elegido (para explicarlo al profesor)
+## Selected Dataset Explanation
 
-Estamos usando el **benchmark IMPROVE (Drug Response Prediction)**. El origen del benchmark es **IMPROVE/CANDLE (Argonne National Lab)**; en nuestro proyecto estos ficheros aparecen ya organizados bajo `csa_data/raw_data/` y el pipeline los preprocesa a HDF5 para entrenar/inferir. Los datos “crudos” que consume DeepTTC (SMILES de fármacos, expresión génica de líneas celulares y la respuesta AUC por par cell–drug) están en `csa_data/raw_data/`, y DeepTTC está preparado para trabajar con ese formato estándar “IMPROVE-style”. Además, para ejecutar el flujo tal y como lo espera el framework, instalamos la **librería `improvelib`** desde el repo **IMPROVE** (`~/tfg/IMPROVE/` con `pip install -e .`), que aporta utilidades y estructura para entrenamiento/inferencia bajo el estándar IMPROVE.
+We use the **IMPROVE benchmark for Drug Response Prediction**. The benchmark originates from **IMPROVE/CANDLE (Argonne National Laboratory)**. In our project, these files are already organized under `csa_data/raw_data/`, and the pipeline preprocesses them into HDF5 files for training and inference.
 
-- **Dataset (datos):** los ficheros de `csa_data/raw_data/` (X: `drug_SMILES.tsv`, `cancer_gene_expression.tsv`; Y: `response.tsv`) + los splits `CCLE_split_0_*.txt`.
-- **Recursos de codificación (no son datos del benchmark, pero son necesarios):** `author_data/ESPF/` (vocabulario ESPF para tokenizar SMILES).
-- **Tooling/estándar (código, no dataset):** repo `IMPROVE/` (instalado como `improvelib`) que permite ejecutar el flujo estilo IMPROVE.
+The raw data consumed by DeepTTC, namely drug SMILES, cancer cell line gene expression, and AUC response values for each cell–drug pair, are stored under `csa_data/raw_data/`. DeepTTC is designed to work with this standard “IMPROVE-style” format.
 
-### Cómo se obtiene / reproduce
-- Repo DeepTTC: clonado en `~/tfg/DeepTTC/` (incluye `csa_data/raw_data/`).
-- Repo IMPROVE: clonado en `~/tfg/IMPROVE/` e instalado en editable: `pip install -e .` (para que funcione `import improvelib`).
-- Preprocesamiento genera los `.h5` y CSVs en `exp_result/` (o `exp_result/runs/<run>/`).
+In addition, to execute the workflow as expected by the framework, we install the **`improvelib`** library from the **IMPROVE** repository located at `~/tfg/IMPROVE/` using `pip install -e .`. This provides utilities and structure for training and inference under the IMPROVE standard.
 
-### Nota sobre particiones (splits)
-- Split “normal” (pares nuevos): `exp_result/` (train/val/test sin solape de pares cell–drug).
-- Splits de generalización: `exp_result/runs/drugout_seed42/` (leave-drug-out) y `exp_res
+* **Dataset files:** files under `csa_data/raw_data/`
+  X features: `drug_SMILES.tsv`, `cancer_gene_expression.tsv`
+  Y target: `response.tsv`
+  Splits: `CCLE_split_0_*.txt`
+
+* **Encoding resources:** `author_data/ESPF/`
+  These are not part of the benchmark data itself, but they are required to tokenize SMILES.
+
+* **Tooling / standard code:** `IMPROVE/` repository
+  Installed as `improvelib` to run the workflow in the IMPROVE-style format.
+
+## How to Reproduce
+
+* Clone the DeepTTC repository into:
+
+  `~/tfg/DeepTTC/`
+
+  This repository includes the `csa_data/raw_data/` directory.
+
+* Clone the IMPROVE repository into:
+
+  `~/tfg/IMPROVE/`
+
+* Install IMPROVE in editable mode:
+
+  `pip install -e .`
+
+  This allows Python to import `improvelib`.
+
+* Run the preprocessing step to generate the `.h5` files and auxiliary CSV files in:
+
+  `exp_result/`
+
+  or, for separated runs:
+
+  `exp_result/runs/<run>/`
+
+## Notes on Data Splits
+
+* **Normal split:** `exp_result/`
+  Standard train/validation/test split with no overlapping cell–drug pairs between splits.
+
+* **Generalization splits:**
+
+  * `exp_result/runs/drugout_seed42/`
+    Leave-drug-out setting, used to evaluate generalization to unseen drugs.
+
+  * `exp_result/runs/cellout_seed42/`
+    Leave-cell-out setting, used to evaluate generalization to unseen cell lines.
