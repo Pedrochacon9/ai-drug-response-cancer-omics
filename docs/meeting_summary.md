@@ -1,100 +1,99 @@
-# Resumen para enseñar en la reunión
+# Summary for the Meeting
 
-## 1. Reorganización del enfoque
+## 1. Reorganization of the Approach
 
-El trabajo ya no se plantea solo como una tabla de resultados, sino como un análisis completo del pipeline:
+The project is no longer presented only as a table of results, but as a complete analysis of the pipeline:
 
-1. entender y preprocesar los datos;
-2. comparar modelos;
-3. analizar errores e interpretar el comportamiento del modelo.
+1. understanding and preprocessing the data;
+2. comparing models;
+3. analyzing errors and interpreting the model behavior.
 
-## 2. Notebook explicativo del dataset
+## 2. Explanatory Dataset Notebook
 
-Se ha creado:
+The following notebook has been created:
 
-notebooks_tfg/01_entender_dataset.ipynb
+`notebooks_tfg/01_entender_dataset.ipynb`
 
-Este notebook explica:
+This notebook explains:
 
-- de dónde vienen los datos;
-- qué es una línea celular;
-- qué es un fármaco;
-- qué es un SMILES;
-- qué es la expresión génica;
-- qué es el AUC;
-- cómo se forma una muestra de entrenamiento.
+* where the data comes from;
+* what a cell line is;
+* what a drug is;
+* what a SMILES representation is;
+* what gene expression is;
+* what AUC means;
+* how a training sample is built.
 
-También permite ver que el fichero raw de expresión génica contiene filas iniciales de metadatos, por lo que el preprocesamiento es importante.
+It also shows that the raw gene expression file contains initial metadata rows, which makes preprocessing an important step.
 
-## 3. Análisis drug-out
+## 3. Drug-Out Analysis
 
-Se ha analizado el experimento drug-out más allá de la métrica global.
+The drug-out experiment has been analyzed beyond the global metric.
 
-Archivos principales:
+Main files:
 
-- tfg-notas/analisis_drugout/resumen_interpretativo_drugout.md
-- tfg-notas/figuras/drugout_rmse_por_farmaco.png
-- tfg-notas/figuras/drugout_scatter_real_predicho.png
-- tfg-notas/figuras/drugout_error_absoluto_hist.png
+* `tfg-notas/analisis_drugout/resumen_interpretativo_drugout.md`
+* `tfg-notas/figuras/drugout_rmse_por_farmaco.png`
+* `tfg-notas/figuras/drugout_scatter_real_predicho.png`
+* `tfg-notas/figuras/drugout_error_absoluto_hist.png`
 
-Conclusión principal:
+Main conclusion:
 
-El error no está repartido igual entre todos los fármacos. Drug_490 concentra mucho error. Además, en el scatter aparecen bandas horizontales, lo que sugiere que en drug-out el modelo tiende a predecir ciertos niveles de AUC y no captura bien la variabilidad real de algunos fármacos no vistos.
+The error is not equally distributed across all drugs. `Drug_490` concentrates a large amount of error. In addition, the scatter plot shows horizontal bands, suggesting that in the drug-out setting the model tends to predict certain AUC levels and does not fully capture the real variability of some unseen drugs.
 
-## 4. ECFP4 y baseline clásico
+## 4. ECFP4 and Classical Baseline
 
-Se ha generado una representación alternativa del fármaco:
+An alternative drug representation has been generated:
 
-tfg-notas/experimentos_baselines/drug_ecfp4.tsv
+`tfg-notas/experimentos_baselines/drug_ecfp.tsv`
 
-Resultado:
+Result:
 
-- 1565 fármacos convertidos.
-- 2048 bits ECFP4 por fármaco.
-- 0 SMILES inválidos.
+* 1565 drugs converted;
+* 2048 ECFP4 bits per drug;
+* 0 invalid SMILES.
 
-También se ha entrenado un Random Forest usando:
+A Random Forest model has also been trained using:
 
-expresión génica + ECFP4
+`gene expression + ECFP4`
 
-Archivos principales:
+Main files:
 
-- tfg-notas/experimentos_baselines/rf_ecfp_pair/test_scores.json
-- tfg-notas/experimentos_baselines/rf_ecfp_pair/summary.json
+* `tfg-notas/experimentos_baselines/rf_ecfp_pair/test_scores.json`
+* `tfg-notas/experimentos_baselines/rf_ecfp_pair/summary.json`
 
-Resultado en test:
+Test result:
 
-- RMSE: 0.0844
-- PCC: 0.8593
-- R2: 0.7381
+* RMSE: 0.0844
+* PCC: 0.8593
+* R2: 0.7381
 
-Comparación:
+Comparison:
 
-DeepTTC baseline tiene RMSE 0.0818, por lo que Random Forest queda cerca, aunque ligeramente peor.
+The DeepTTC baseline achieves an RMSE of 0.0818, so Random Forest performs close to DeepTTC, although slightly worse.
 
-## 5. Vectores latentes
+## 5. Latent Vectors
 
-Se ha inspeccionado Step3_model.py y se han localizado puntos claros para extraer vectores latentes.
+`Step3_model.py` has been inspected, and clear points for extracting latent vectors have been identified.
 
-Archivos principales:
+Main files:
 
-- tfg-notas/analisis_latentes/localizacion_latentes.txt
-- tfg-notas/analisis_latentes/resumen_localizacion_latentes.md
+* `tfg-notas/analisis_latentes/localizacion_latentes.txt`
+* `tfg-notas/analisis_latentes/resumen_localizacion_latentes.md`
 
-Puntos localizados:
+Identified points:
 
-1. encoded_layers[:, 0] puede interpretarse como vector latente del fármaco.
-2. v_f = torch.cat((v_D, v_P), 1) puede interpretarse como vector latente fusionado célula-fármaco.
+1. `encoded_layers[:, 0]` can be interpreted as the drug latent vector.
+2. `v_f = torch.cat((v_D, v_P), 1)` can be interpreted as the fused cell–drug latent vector.
 
-El vector más interesante sería fusion_latent = v_f, porque representa el par célula-fármaco justo antes de la predicción final de AUC.
+The most interesting vector would be `fusion_latent = v_f`, because it represents the cell–drug pair just before the final AUC prediction.
 
-## 6. Siguientes pasos
+## 6. Next Steps
 
-Los siguientes pasos naturales serían:
+The natural next steps would be:
 
-1. entrenar Random Forest o XGBoost también en drug-out;
-2. implementar de forma controlada return_latent=True en DeepTTC;
-3. extraer fusion_latent y analizarlo con PCA/t-SNE;
-4. estudiar si fármacos problemáticos como Drug_490 aparecen separados en el espacio latente;
-5. repetir algunos experimentos con otras seeds para comprobar estabilidad.
-
+1. train Random Forest or XGBoost also in the drug-out setting;
+2. implement a controlled `return_latent=True` option in DeepTTC;
+3. extract `fusion_latent` and analyze it with PCA/t-SNE;
+4. study whether problematic drugs such as `Drug_490` appear separated in the latent space;
+5. repeat some experiments with different seeds to check stability.
