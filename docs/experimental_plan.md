@@ -1,87 +1,87 @@
-# Plan experimental del TFG
+# Experimental Plan of the Final Degree Project
 
-## Objetivo general
+## General Objective
 
-El objetivo del trabajo no es únicamente obtener una métrica final de predicción, sino analizar cómo influyen los datos de entrada, el preprocesamiento, la representación del fármaco y el tipo de partición en la predicción de respuesta farmacológica.
+The objective of this work is not only to obtain a final prediction metric, but also to analyze how the input data, preprocessing, drug representation, and type of data split influence drug response prediction.
 
-El problema estudiado consiste en predecir el valor de AUC para un par línea celular-fármaco usando:
+The studied problem consists of predicting the AUC value for a cell line–drug pair using:
 
-- expresión génica de la línea celular;
-- representación molecular del fármaco;
-- respuesta observada AUC como variable objetivo.
+* gene expression of the cell line;
+* molecular representation of the drug;
+* observed AUC response as the target variable.
 
-## Bloques del trabajo
+## Work Blocks
 
-El trabajo se organiza en tres bloques:
+The project is organized into three main blocks:
 
-1. Comprensión y preprocesamiento del dataset.
-2. Comparación experimental de modelos.
-3. Análisis e interpretación del comportamiento del modelo.
+1. Understanding and preprocessing the dataset.
+2. Experimental comparison of models.
+3. Analysis and interpretation of the model behavior.
 
-## Experimentos realizados
+## Experiments Performed
 
-| Experimento | Modelo | Entrada | Split | Objetivo |
-|---|---|---|---|---|
-| E1 | DeepTTC | SMILES + expresión génica | pair split | Evaluar rendimiento en pares célula-fármaco nuevos |
-| E2 | DeepTTC heads4 | SMILES + expresión génica | pair split | Ablación del número de cabezas de atención |
-| E3 | DeepTTC layers4 | SMILES + expresión génica | pair split | Ablación del número de capas Transformer |
-| E4 | DeepTTC | SMILES + expresión génica | cell-out | Evaluar generalización a líneas celulares no vistas |
-| E5 | DeepTTC | SMILES + expresión génica | drug-out | Evaluar generalización a fármacos no vistos |
+| Experiment | Model           | Input                    | Split      | Objective                                    |
+| ---------- | --------------- | ------------------------ | ---------- | -------------------------------------------- |
+| E1         | DeepTTC         | SMILES + gene expression | pair split | Evaluate performance on new cell–drug pairs  |
+| E2         | DeepTTC heads4  | SMILES + gene expression | pair split | Ablation of the number of attention heads    |
+| E3         | DeepTTC layers4 | SMILES + gene expression | pair split | Ablation of the number of Transformer layers |
+| E4         | DeepTTC         | SMILES + gene expression | cell-out   | Evaluate generalization to unseen cell lines |
+| E5         | DeepTTC         | SMILES + gene expression | drug-out   | Evaluate generalization to unseen drugs      |
 
-## Resultados observados hasta ahora
+## Results Observed So Far
 
-Los resultados muestran que el modelo funciona bien en el split normal de pares célula-fármaco y mantiene un rendimiento razonable en cell-out.  
-Sin embargo, el rendimiento cae de forma importante en drug-out.
+The results show that the model performs well on the normal cell–drug pair split and maintains reasonable performance in the cell-out setting.
 
-Esto sugiere que la generalización a fármacos completamente nuevos es el punto más difícil del problema.
+However, performance drops significantly in the drug-out setting.
 
-## Experimentos propuestos
+This suggests that generalization to completely unseen drugs is the most challenging part of the problem.
 
-| Experimento | Modelo | Entrada | Split | Objetivo |
-|---|---|---|---|---|
-| E6 | Random Forest | expresión génica + ECFP4 | pair split | Baseline clásico |
-| E7 | XGBoost | expresión génica + ECFP4 | pair split | Baseline clásico fuerte |
-| E8 | Random Forest | expresión génica + ECFP4 | drug-out | Ver si el fallo en fármacos nuevos también aparece en un modelo clásico |
-| E9 | XGBoost | expresión génica + ECFP4 | drug-out | Comparar generalización drug-out frente a DeepTTC |
-| E10 | DeepTTC latentes | vectores internos | pair/drug-out | Analizar qué aprende internamente el modelo |
+## Proposed Experiments
 
-## Análisis complementarios
+| Experiment | Model                          | Input                   | Split         | Objective                                                                |
+| ---------- | ------------------------------ | ----------------------- | ------------- | ------------------------------------------------------------------------ |
+| E6         | Random Forest                  | gene expression + ECFP4 | pair split    | Classical baseline                                                       |
+| E7         | XGBoost                        | gene expression + ECFP4 | pair split    | Strong classical baseline                                                |
+| E8         | Random Forest                  | gene expression + ECFP4 | drug-out      | Check whether the drop on unseen drugs also appears in a classical model |
+| E9         | XGBoost                        | gene expression + ECFP4 | drug-out      | Compare drug-out generalization against DeepTTC                          |
+| E10        | DeepTTC latent representations | internal vectors        | pair/drug-out | Analyze what the model learns internally                                 |
 
-Además de las métricas globales, se realizarán análisis complementarios:
+## Complementary Analyses
 
-- distribución de AUC;
-- número de ejemplos por fármaco;
-- número de ejemplos por línea celular;
-- solape de entidades entre splits;
-- error por fármaco en drug-out;
-- comparación entre AUC real y AUC predicho;
-- extracción y visualización de vectores latentes.
+In addition to global metrics, several complementary analyses will be performed:
 
-## Justificación
+* AUC distribution;
+* number of samples per drug;
+* number of samples per cell line;
+* entity overlap between splits;
+* error per drug in the drug-out setting;
+* comparison between true AUC and predicted AUC;
+* extraction and visualization of latent vectors.
 
-El split normal evalúa pares célula-fármaco nuevos, pero no evalúa fármacos completamente nuevos porque las mismas drogas aparecen en train, validación y test.  
-Por eso es necesario estudiar splits más exigentes, especialmente drug-out.
+## Justification
 
-El análisis drug-out permite evaluar si el modelo aprende una representación generalizable del fármaco o si depende demasiado de haber visto previamente las drogas durante el entrenamiento.
+The normal split evaluates new cell–drug pairs, but it does not evaluate completely unseen drugs because the same drugs appear in training, validation, and test sets.
 
+For this reason, it is necessary to study more demanding splits, especially the drug-out setting.
 
-## Resultado preliminar de Random Forest con ECFP4
+The drug-out analysis allows us to evaluate whether the model learns a generalizable drug representation or whether it depends too heavily on having seen the drugs during training.
 
-Se ha ejecutado un primer baseline clásico usando Random Forest con:
+## Preliminary Random Forest Result with ECFP4
 
-`expresión génica + ECFP4`
+A first classical baseline was executed using Random Forest with:
 
-La entrada final tiene 3006 características:
+`gene expression + ECFP4`
 
-- 958 genes;
-- 2048 bits ECFP4.
+The final input contains 3006 features:
 
-Resultado en test sobre el split normal:
+* 958 genes;
+* 2048 ECFP4 bits.
 
-| Modelo | Entrada | Split | RMSE | PCC | R2 |
-|---|---|---|---:|---:|---:|
+Test result on the normal split:
+
+| Model            | Input          | Split      |   RMSE |    PCC |     R2 |
+| ---------------- | -------------- | ---------- | -----: | -----: | -----: |
 | DeepTTC baseline | SMILES + genes | pair split | 0.0818 | 0.8685 | 0.7542 |
-| Random Forest | ECFP4 + genes | pair split | 0.0844 | 0.8593 | 0.7381 |
+| Random Forest    | ECFP4 + genes  | pair split | 0.0844 | 0.8593 | 0.7381 |
 
-Este resultado muestra que el baseline clásico queda cerca de DeepTTC en el split normal, aunque ligeramente por debajo.
-
+This result shows that the classical baseline is close to DeepTTC on the normal split, although it performs slightly worse.
