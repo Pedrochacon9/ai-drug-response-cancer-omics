@@ -1,12 +1,16 @@
-## Resultados (DeepTTC + IMPROVE)
+## Results (DeepTTC + IMPROVE)
 
-Se entrenó DeepTTC para predecir respuesta a fármacos usando el benchmark IMPROVE (expresión génica + representación del fármaco basada en SMILES). La evaluación se realizó sobre el conjunto TEST y se registraron métricas de regresión (MSE, RMSE, correlación de Pearson/Spearman y R²). Además, se generaron gráficas de dispersión AUC real vs AUC predicha para documentar visualmente la calidad de predicción.
+DeepTTC was trained to predict drug response using the IMPROVE benchmark, combining gene expression data with a SMILES-based drug representation. The evaluation was performed on the TEST set, and regression metrics were reported, including MSE, RMSE, Pearson/Spearman correlation, and R². In addition, scatter plots comparing true AUC vs predicted AUC were generated to visually document prediction quality.
 
-En el estudio de ablation del bloque Transformer de fármaco, el **baseline (8 cabezas, 8 capas)** obtuvo el mejor rendimiento global. Reducir el número de cabezas a 4 (heads4) apenas altera los resultados pero no aporta mejora. En cambio, reducir el número de capas a 4 (layers4) degrada de forma más clara el rendimiento (sube RMSE y baja R²), lo que indica que la profundidad del encoder contribuye a capturar relaciones relevantes entre estructura del fármaco y respuesta.
+In the ablation study of the drug Transformer block, the **baseline configuration with 8 attention heads and 8 encoder layers** achieved the best overall performance. Reducing the number of attention heads to 4 (`heads4`) barely changed the results but did not provide any improvement. In contrast, reducing the number of encoder layers to 4 (`layers4`) produced a clearer performance degradation, increasing RMSE and decreasing R². This suggests that encoder depth contributes to capturing relevant relationships between drug structure and response.
 
-### Limitaciones y trabajo futuro
+### Limitations and Future Work
 
-En la partición actual, train/val/test comparten los mismos 24 fármacos y parte de las líneas celulares; por ello, la evaluación refleja principalmente generalización a **pares nuevos** (cell–drug). Como extensión, se plantea evaluar generalización más exigente mediante:
-1) **Split por fármaco** (leave-drug-out): el modelo predice respuesta para fármacos no vistos en entrenamiento.
-2) **Split por línea celular** (leave-cell-out): predicción en células no vistas.
-Estas variantes permiten medir mejor la robustez del modelo en escenarios de descubrimiento/traslación.
+In the current split, train/validation/test share the same 24 drugs and part of the cell lines. Therefore, the evaluation mainly reflects generalization to **new cell–drug pairs**, rather than to completely unseen entities.
+
+As an extension, more demanding generalization settings are proposed:
+
+1. **Leave-drug-out split**: the model predicts responses for drugs that were not seen during training.
+2. **Leave-cell-out split**: the model predicts responses for cell lines that were not seen during training.
+
+These variants allow a better assessment of model robustness in discovery and translational scenarios.
