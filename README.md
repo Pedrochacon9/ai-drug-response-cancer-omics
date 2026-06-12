@@ -87,28 +87,28 @@ docs/          Thesis notes and documentation
 data_sample/   Small sample files showing the input data format
 ```
 
-Key folders
-src/
+# Key folders
+**src/**
 
 Contains the adapted DeepTTC pipeline and auxiliary scripts for preprocessing, training, inference and result processing.
 
-data_sample/
+**data_sample/**
 
 Contains small sample files derived from the original dataset structure. These files are intended only to illustrate the expected input format.
 
-figures/
+**figures/**
 
 Contains visualizations generated during the experimental analysis, including real vs predicted AUC plots and drug-out error analysis.
 
-results/
+**results/**
 
 Contains prediction outputs and experiment-related results. The baseline outputs are organized under results/baseline/.
 
-docs/
+**docs/**
 
 Contains complementary documentation about the dataset, model, methodology, experimental design and results.
 
-Technologies used
+**Technologies used**
 Python
 pandas
 NumPy
@@ -122,7 +122,7 @@ Omics data analysis
 Git/GitHub
 Limitations
 
-This project is research-oriented and has several important limitations:
+**This project is research-oriented and has several important limitations:**
 
 It uses cancer cell line data, not direct patient-level clinical data.
 The model has not been clinically validated.
@@ -131,7 +131,7 @@ The results should be interpreted as experimental and exploratory.
 The repository is not intended for medical use or treatment recommendation.
 Future work
 
-Possible future research directions include:
+**Possible future research directions include:**
 
 Improving drug-out generalization.
 Testing graph neural networks for molecular representation.
@@ -144,13 +144,13 @@ Product-oriented vision
 
 This project can be extended into a research platform for oncology drug response analysis.
 
-A possible future product direction is:
+**A possible future product direction is:**
 
 An AI-powered research platform that integrates omics data and molecular drug representations to prioritize drug response hypotheses in cancer, with explainability, uncertainty estimation and benchmark-based validation.
 
 This should be positioned as a research and hypothesis prioritization tool, not as a clinical decision-making system.
 
-Author
+**Author**
 
 Pedro Chacón Cabrera
 Health Engineering — Clinical Informatics
